@@ -1,0 +1,584 @@
+Program.Sub.ScreenSU.Start
+gui.SS_Form1..create
+gui.SS_Form1..caption("BOM Work Order Status by Project")
+gui.SS_Form1..size(3285,2505)
+gui.SS_Form1..position(0,0)
+gui.SS_Form1..event(unload,ss_form1_unload)
+gui.SS_Form1..alwaysontop(False)
+gui.SS_Form1..fontname("Arial")
+gui.SS_Form1..fontsize(8)
+gui.SS_Form1..forecolor(0)
+gui.SS_Form1..fontstyle(,,,,)
+gui.SS_Form1..BackColor(-2147483633)
+gui.SS_Form1..controlbox(True)
+gui.SS_Form1..maxbutton(False)
+gui.SS_Form1..minbutton(False)
+gui.SS_Form1..mousepointer(0)
+gui.SS_Form1..moveable(True)
+gui.SS_Form1..sizeable(False)
+gui.SS_Form1..ShowInTaskBar(True)
+gui.SS_Form1..titlebar(True)
+gui.SS_Form1.lbl_txtProject.create(label,"Part",True,915,200,1,100,135,True,0,Arial,8,-2147483633,0)
+gui.SS_Form1.txtPart.create(textbox,"",True,2445,330,0,100,335,False,0,Arial,8,16777215,1)
+gui.SS_Form1.cmd_txtPart.create(button)
+gui.SS_Form1.cmd_txtPart.caption("^")
+gui.SS_Form1.cmd_txtPart.visible(True)
+gui.SS_Form1.cmd_txtPart.size(330,330)
+gui.SS_Form1.cmd_txtPart.zorder(0)
+gui.SS_Form1.cmd_txtPart.position(2615,335)
+gui.SS_Form1.cmd_txtPart.enabled(True)
+gui.SS_Form1.cmd_txtPart.fontname("Arial")
+gui.SS_Form1.cmd_txtPart.fontsize(8)
+gui.SS_Form1.cmd_txtPart.event(click,cmd_txtpart_click)
+gui.SS_Form1.cmdPrint.create(button)
+gui.SS_Form1.cmdPrint.caption("Print")
+gui.SS_Form1.cmdPrint.visible(True)
+gui.SS_Form1.cmdPrint.size(1000,360)
+gui.SS_Form1.cmdPrint.zorder(0)
+gui.SS_Form1.cmdPrint.position(100,1500)
+gui.SS_Form1.cmdPrint.enabled(True)
+gui.SS_Form1.cmdPrint.fontname("Arial")
+gui.SS_Form1.cmdPrint.fontsize(8)
+gui.SS_Form1.cmdPrint.event(click,cmdprint_click)
+gui.SS_Form1.lblProject.create(label,"Project",True,1935,255,1,100,770,True,0,Arial,8,-2147483633,0)
+gui.SS_Form1.txtProject.create(textbox,"",True,2445,300,0,100,970,False,0,Arial,8,-2147483643,1)
+gui.SS_Form1.cmdproject.create(button)
+gui.SS_Form1.cmdproject.caption("^")
+gui.SS_Form1.cmdproject.visible(True)
+gui.SS_Form1.cmdproject.size(330,330)
+gui.SS_Form1.cmdproject.zorder(0)
+gui.SS_Form1.cmdproject.position(2615,970)
+gui.SS_Form1.cmdproject.enabled(True)
+gui.SS_Form1.cmdproject.fontname("Arial")
+gui.SS_Form1.cmdproject.fontsize(8)
+gui.SS_Form1.cmdproject.event(click,cmdproject_click)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+
+Variable.UDT.uWOHd.Define("Job",String)
+Variable.UDT.uWOHd.Define("Suffix",String)
+Variable.UDT.uWOHd.Define("Project",String)
+Variable.UDT.uWOHd.Define("Part",String)
+Variable.UDT.uWOHd.Define("CustPart",String)
+Variable.UDT.uWOHd.Define("Descr",String)
+Variable.UDT.uWOLn.Define("Terminal",String)
+Variable.UDT.uWOLn.Define("Job",String)
+Variable.UDT.uWOLn.Define("Suffix",String)
+Variable.UDT.uWOLn.Define("Part",String)
+Variable.UDT.uWOLn.Define("CustPart",String)
+Variable.UDT.uWOLn.Define("Descr",String)
+Variable.UDT.uWOLn.Define("QtyReq",Float)
+Variable.UDT.uWOLn.Define("QtyIss",Float)
+Variable.UDT.uWOLn.Define("QtyOnH",Float)
+Variable.UDT.uWOLn.Define("QtyWO",Float)
+Variable.UDT.uWOLn.Define("QtyPO",Float)
+Variable.UDT.uWOLn.Define("QtyOrd",Float)
+Variable.UDT.uWOLn.Define("ParentPart",String)
+Variable.UDT.uWOLn.Define("Sort",Long)
+Variable.UDT.uWOLn.Define("Level",Long)
+Variable.UDT.uWOLn.Define("DateDue",String)
+Variable.uGlobal.uWOLn.Declare("uWOLn")
+Variable.Global.sPart.Declare(String)
+Variable.Global.iSortOrder.Declare(Long,0)
+Variable.Global.iLevel.Declare(Long,0)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'Coded by: mla
+'Project Start Date: 10/18/2011
+'Notes:
+'  Jormac
+F.ODBC.Connection!con.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+'Gui.SS_Form1.txtPart.Text("TPAZ-070-233-001")
+'Gui.SS_Form1.txtProject.Text("TOPAZ")
+'Gui.SS_Form1.txtPart.Text("LR5A-080-287-001")
+'Gui.SS_Form1.txtProject.Text("LR5A")
+Gui.SS_Form1..Show
+
+Program.Sub.Main.End
+
+program.sub.cmdprint_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdprint_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSql.Declare(String)
+
+F.Intrinsic.Control.If(V.Screen.SS_Form1!txtPart.Text,=,"")
+	F.Intrinsic.UI.Msgbox("Please select a part!")
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.If(V.Screen.SS_Form1!txtProject.Text,=,"")
+		F.Intrinsic.UI.Msgbox("Please select a project!")
+	F.Intrinsic.Control.Else
+		Gui.SS_Form1..Enabled(False)
+		F.Intrinsic.String.Concat("Delete GCG_4100_WOSTATUS_Hd where Terminal = '",V.Caller.Terminal,"'",V.Local.sSql)
+		F.ODBC.Connection!con.Execute(V.Local.sSql)
+		F.Intrinsic.String.Concat("Delete GCG_4100_WOSTATUS_Ln where Terminal = '",V.Caller.Terminal,"'",V.Local.sSql)
+		F.ODBC.Connection!con.Execute(V.Local.sSql)
+		V.Global.sPart.Set(V.Screen.SS_Form1!txtPart.Text)
+		F.Intrinsic.Control.CallSub(Loadudt)
+		F.Intrinsic.Control.CallSub(Loadrst)
+		F.Intrinsic.Control.CallSub(Callbi)
+		F.Intrinsic.Control.CallSub(Ss_form1_unload)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdprint_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4100_BOM_Work_Order_Status.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Ss_form1_unload)
+Function.Intrinsic.Control.EndIf
+
+program.sub.cmdprint_click.end
+
+program.sub.ss_form1_unload.start
+F.ODBC.Connection!con.Close
+F.Intrinsic.Control.End
+
+program.sub.ss_form1_unload.end
+
+Program.Sub.LoadUDT.Start
+F.Intrinsic.Control.SetErrorHandler("LoadUDT_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.iUB.Declare(Long)
+V.Local.sSql.Declare(String)
+V.Local.bChk.Declare(Boolean)
+V.Local.iSource.Declare(Long)
+
+V.uGlobal.uWOLn.Redim(-1,-1)
+V.Local.iUB.Set(-1)
+F.Intrinsic.String.Concat("Select JOB, SUFFIX from V_JOB_HEADER where PART = '",V.Global.sPart.Trim,"' and PROJECT = '",V.Screen.SS_Form1!txtProject.Text,"' ORDER BY JOB,SUFFIX",V.Local.sSql)
+F.ODBC.Connection!con.OpenLocalRecordsetRO("rst",V.Local.sSql)
+F.Intrinsic.Control.If(V.ODBC.con!rst.EOF,=,True)
+	F.Intrinsic.UI.Msgbox("No work order found for selected part and project")
+	Gui.SS_Form1..Enabled(True)
+F.Intrinsic.Control.Else
+	F.Intrinsic.String.Concat("Select JOB, SUFFIX, PART, DESCRIPTION, HOURS_ESTIMATED, HOURS_ACTUAL from V_JOB_OPERATIONS where JOB = '",V.ODBC.con!rst.FieldValTrim!JOB,"' and SUFFIX = '",V.ODBC.con!rst.FieldValTrim!SUFFIX,"' and LMO = 'M' and HOURS_ACTUAL < HOURS_ESTIMATED",V.Local.sSql)
+	F.ODBC.Connection!con.OpenLocalRecordsetRO("rstOper",V.Local.sSql)
+	F.Intrinsic.Control.If(V.ODBC.con!rstOper.EOF,<>,True)
+		F.Intrinsic.Control.DoUntil(V.ODBC.con!rstOper.EOF,=,True)
+			V.Global.iLevel.Set(0)
+			F.Intrinsic.Math.Add(V.Global.iSortOrder,1,V.Global.iSortOrder)
+			F.Intrinsic.String.Concat("Select CODE_SOURCE from INVENTORY_MST2 where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+			F.ODBC.Connection!con.OpenLocalRecordsetRO("rstSource",V.Local.sSql)
+			F.Intrinsic.Control.If(V.ODBC.con!rstSource.EOF,<>,True)
+				F.Intrinsic.Control.If(V.ODBC.con!rstSource.FieldValTrim!CODE_SOURCE,=,"M")
+					V.Local.bChk.Set(True)
+				F.Intrinsic.Control.Else
+					F.Intrinsic.Control.If(V.ODBC.con!rstSource.FieldValTrim!CODE_SOURCE,=,"F")
+						V.Local.bChk.Set(True)
+					F.Intrinsic.Control.Else
+						V.Local.bChk.Set(False)
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.If(V.Local.bChk,=,True)
+					V.Local.iUB.Set(V.uGlobal.uWOLn.UBound)
+					F.Intrinsic.Control.If(V.uGlobal.uWOLn.UBound,=,-1)
+						V.uGlobal.uWOLn.Redim(0,0)
+					F.Intrinsic.Control.EndIf
+					F.Intrinsic.Math.Add(V.Local.iUB,1,V.Local.iUB)
+					V.uGlobal.uWOLn.RedimPreserve(V.uGlobal.uWOLn.LBound,V.Local.iUB)
+					V.uGlobal.uWOLn(v.Local.iUB)!Sort.Set(V.Global.iSortOrder)
+					V.uGlobal.uWOLn(v.Local.iUB)!Level.Set(V.Global.iLevel)
+					V.uGlobal.uWOLn(V.Local.iUB)!Terminal.Set(V.Caller.Terminal)
+					V.uGlobal.uWOLn(V.Local.iUB)!Job.Set(V.ODBC.con!rstOper.FieldValTrim!JOB)
+					V.uGlobal.uWOLn(V.Local.iUB)!Suffix.Set(V.ODBC.con!rstOper.FieldValTrim!SUFFIX)
+					V.uGlobal.uWOLn(V.Local.iUB)!Part.Set(V.ODBC.con!rstOper.FieldValTrim!PART)
+					V.uGlobal.uWOLn(V.Local.iUB)!Descr.Set(V.ODBC.con!rstOper.FieldValTrim!DESCRIPTION)
+					F.Intrinsic.String.Concat("Select USER_DEFINED_PART from V_INV_CROSS_REF where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstCP",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstCP.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!CustPart.Set(V.ODBC.con!rstCP.FieldValTrim!USER_DEFINED_PART)
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstCP.Close
+					V.uGlobal.uWOLn(V.Local.iUB)!QtyReq.Set(V.ODBC.con!rstOper.FieldValFloat!HOURS_ESTIMATED)
+					V.uGlobal.uWOLn(V.Local.iUB)!QtyIss.Set(V.ODBC.con!rstOper.FieldValFloat!HOURS_ACTUAL)
+					F.Intrinsic.String.Concat("Select PART, QTY_ONHAND, QTY_ONORDER_PO, QTY_ONORDER_WO from V_INVENTORY_MSTR where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstInv",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstInv.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOnH.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONHAND)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyPO.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONORDER_PO)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyWO.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONORDER_WO)
+					F.Intrinsic.Control.Else
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOnH.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyPO.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyWO.Set(0)
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstInv.Close
+					F.Intrinsic.String.Concat("Select QTY_ORDER, DATE_DUE,PART from V_JOB_HEADER where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"' ORDER BY DATE_DUE",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstWO",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstWO.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOrd.Set(V.ODBC.con!rstWO.FieldValFloat!QTY_ORDER)
+						V.uGlobal.uWOLn(V.Local.iUB)!DateDue.Set(V.ODBC.con!rstWO.FieldVal!DATE_DUE)
+						V.uGlobal.uWOLn(v.Local.iUB)!ParentPart.Set(V.ODBC.con!rstWO.FieldValTrim!PART)
+					F.Intrinsic.Control.Else
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOrd.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!DateDue.Set("01/01/1900")
+						V.uGlobal.uWOLn(v.Local.iUB)!ParentPart.Set("")
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstWO.Close
+					'If part is manufactured checking for additional work orders to explode out
+					F.Intrinsic.Control.CallSub(Explodeproc,"sPart",V.ODBC.con!rstOper.FieldValTrim!PART)
+				F.Intrinsic.Control.Else
+					V.Local.iUB.Set(V.uGlobal.uWOLn.UBound)
+					F.Intrinsic.Control.If(V.uGlobal.uWOLn.UBound,=,-1)
+						V.uGlobal.uWOLn.Redim(0,0)
+					F.Intrinsic.Control.EndIf
+					F.Intrinsic.Math.Add(V.Local.iUB,1,V.Local.iUB)
+					V.uGlobal.uWOLn.RedimPreserve(V.uGlobal.uWOLn.LBound,V.Local.iUB)
+					V.uGlobal.uWOLn(v.Local.iUB)!Sort.Set(V.Global.iSortOrder)
+					V.uGlobal.uWOLn(v.Local.iUB)!Level.Set(V.Global.iLevel)
+					V.uGlobal.uWOLn(V.Local.iUB)!Terminal.Set(V.Caller.Terminal)
+					V.uGlobal.uWOLn(V.Local.iUB)!Job.Set(V.ODBC.con!rstOper.FieldValTrim!JOB)
+					V.uGlobal.uWOLn(V.Local.iUB)!Suffix.Set(V.ODBC.con!rstOper.FieldValTrim!SUFFIX)
+					V.uGlobal.uWOLn(V.Local.iUB)!Part.Set(V.ODBC.con!rstOper.FieldValTrim!PART)
+					V.uGlobal.uWOLn(V.Local.iUB)!Descr.Set(V.ODBC.con!rstOper.FieldValTrim!DESCRIPTION)
+					F.Intrinsic.String.Concat("Select USER_DEFINED_PART from V_INV_CROSS_REF where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstCP",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstCP.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!CustPart.Set(V.ODBC.con!rstCP.FieldValTrim!USER_DEFINED_PART)
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstCP.Close
+					V.uGlobal.uWOLn(V.Local.iUB)!QtyReq.Set(V.ODBC.con!rstOper.FieldValFloat!HOURS_ESTIMATED)
+					V.uGlobal.uWOLn(V.Local.iUB)!QtyIss.Set(V.ODBC.con!rstOper.FieldValFloat!HOURS_ACTUAL)
+					F.Intrinsic.String.Concat("Select PART, QTY_ONHAND, QTY_ONORDER_PO, QTY_ONORDER_WO from V_INVENTORY_MSTR where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstInv",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstInv.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOnH.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONHAND)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyPO.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONORDER_PO)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyWO.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONORDER_WO)
+					F.Intrinsic.Control.Else
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOnH.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyPO.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyWO.Set(0)
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstInv.Close
+					'Writing quantity information
+					F.Intrinsic.String.Concat("Select QTY_ORDER, DATE_DUE_LINE, PART from V_PO_LINES where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"' ORDER BY DATE_DUE_LINE",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstPO",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstPO.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOrd.Set(V.ODBC.con!rstPO.FieldValFloat!QTY_ORDER)
+						V.uGlobal.uWOLn(V.Local.iUB)!DateDue.Set(V.ODBC.con!rstPO.FieldVal!DATE_DUE_LINE)
+						V.uGlobal.uWOLn(v.Local.iUB)!ParentPart.Set(V.ODBC.con!rstPO.FieldValTrim!PART)
+					F.Intrinsic.Control.Else
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOrd.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!DateDue.Set("01/01/1900")
+						V.uGlobal.uWOLn(v.Local.iUB)!ParentPart.Set("")
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstPO.Close
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.EndIf
+			F.ODBC.con!rstSource.Close
+		F.ODBC.con!rstOper.MoveNext
+		F.Intrinsic.Control.Loop
+	F.Intrinsic.Control.EndIf
+	F.ODBC.con!rstOper.Close
+F.Intrinsic.Control.EndIf
+F.ODBC.con!rst.Close
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("LoadUDT_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4100_BOM_Work_Order_Status.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.CallSub(Ss_form1_unload)
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.LoadUDT.End
+
+Program.Sub.LoadRST.Start
+F.Intrinsic.Control.SetErrorHandler("LoadRST_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.i.Declare(Long)
+V.Local.sSql.Declare(String)
+
+F.Intrinsic.Control.If(V.uGlobal.uWOLn.UBound,<>,-1)
+	V.Local.sSql.Set("Select * from GCG_4100_WOSTATUS_Ln")
+	F.ODBC.Connection!con.OpenRecordsetRW("rst",V.Local.sSql)
+	F.Intrinsic.Control.For(V.Local.i,V.uGlobal.uWOLn.LBound,V.uGlobal.uWOLn.UBound,1)
+		F.ODBC.con!rst.AddNew
+			F.ODBC.con!rst.Set!Terminal(V.uGlobal.uWOLn(V.Local.i)!Terminal)
+			F.ODBC.con!rst.Set!Job(V.uGlobal.uWOLn(V.Local.i)!Job)
+			F.ODBC.con!rst.Set!Suffix(V.uGlobal.uWOLn(V.Local.i)!Suffix)
+			F.ODBC.con!rst.Set!Part(V.uGlobal.uWOLn(V.Local.i)!Part)
+			F.ODBC.con!rst.Set!Customer_Part(V.uGlobal.uWOLn(V.Local.i)!CustPart)
+			F.ODBC.con!rst.Set!Description(V.uGlobal.uWOLn(V.Local.i)!Descr)
+			F.ODBC.con!rst.Set!Qty_Required(V.uGlobal.uWOLn(V.Local.i)!QtyReq)
+			F.ODBC.con!rst.Set!Qty_Issued(V.uGlobal.uWOLn(V.Local.i)!QtyIss)
+			F.ODBC.con!rst.Set!Qty_On_Hand(V.uGlobal.uWOLn(V.Local.i)!QtyOnH)
+			F.ODBC.con!rst.Set!Qty_On_WO(V.uGlobal.uWOLn(V.Local.i)!QtyWO)
+			F.ODBC.con!rst.Set!Qty_On_PO(V.uGlobal.uWOLn(V.Local.i)!QtyPO)
+			F.ODBC.con!rst.Set!Qty_Ordered(V.uGlobal.uWOLn(V.Local.i)!QtyOrd)
+			F.ODBC.con!rst.Set!Date_Due(V.uGlobal.uWOLn(V.Local.i)!DateDue.PervasiveDate)
+			F.ODBC.con!rst.Set!ParentPart(V.uGlobal.uWOLn(v.Local.i)!ParentPart)
+			F.ODBC.con!rst.Set!Sort(V.uGlobal.uWOLn(v.Local.i)!Sort)
+			F.ODBC.con!rst.Set!Level(V.uGlobal.uWOLn(v.Local.i)!Level)
+		F.ODBC.con!rst.Update
+	F.Intrinsic.Control.Next(V.Local.i)
+	F.ODBC.con!rst.Close
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("LoadRST_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4100_BOM_Work_Order_Status.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.LoadRST.End
+
+Program.Sub.CallBI.Start
+F.Intrinsic.Control.SetErrorHandler("CallBI_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sParam.Declare(String)
+V.Local.sParamVal.Declare(String)
+V.Local.iBI.Declare(Long)
+
+V.Local.sParam.Set("Terminal*!*Part*!*Project")
+F.Intrinsic.String.Split(V.Local.sParam,"*!*",V.Local.sParam)
+F.Intrinsic.String.Concat(V.Caller.Terminal,"*!*",V.Screen.SS_Form1!txtPart.Text,"*!*",V.Screen.SS_Form1!txtProject.Text,V.Local.sParamVal)
+F.Intrinsic.String.Split(V.Local.sParamVal,"*!*",V.Local.sParamVal)
+F.Global.BI.GetIDFromName("GCG_4100_BOM_Work_Order_Status.rpt",V.Local.iBI)
+F.Global.BI.PrintReport(V.Local.iBI,0,V.Local.sParam,V.Local.sParamVal,"",False)
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("CallBI_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4100_BOM_Work_Order_Status.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.CallBI.End
+
+program.sub.cmdproject_click.start
+F.Intrinsic.Control.SetErrorHandler("cmdproject_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSql.Declare(String)
+V.Local.sTitles.Declare(String)
+V.Local.sWidths.Declare(String)
+V.Local.sRet.Declare(String)
+
+V.Local.sSql.Set("Select PROJECT, DESCR from V_PROJECT_MASTER ORDER BY PROJECT")
+V.Local.sTitles.Set("Project*!*Description")
+V.Local.sWidths.Set("2500*!*4200")
+F.Intrinsic.String.Split(V.Local.sTitles,"*!*",V.Local.sTitles)
+F.Intrinsic.String.Split(V.Local.sWidths,"*!*",V.Local.sWidths)
+
+F.Intrinsic.UI.SetBrowserHotTypeAhead(True)
+F.Intrinsic.UI.Browser("Select Part","con",V.Local.sSql,V.Local.sTitles,V.Local.sWidths,7000,8000,V.Local.sRet)
+F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+	F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+	Gui.SS_Form1.txtProject.Text(V.Local.sRet(0))
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmdproject_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4100_BOM_Work_Order_Status.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+
+
+program.sub.cmdproject_click.end
+
+program.sub.cmd_txtpart_click.start
+F.Intrinsic.Control.SetErrorHandler("cmd_txtpart_click_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.sSql.Declare(String)
+V.Local.sTitles.Declare(String)
+V.Local.sWidths.Declare(String)
+V.Local.sRet.Declare(String)
+
+V.Local.sSql.Set("Select USER_DEFINED_PART, PART, DESCRIPTION from V_INV_CROSS_REF where CUSTOMER = '' and VENDOR = '' and USER_DEFINED_PART <> '' order by USER_DEFINED_PART")
+V.Local.sTitles.Set("Xref Part*!*Part*!*Description")
+V.Local.sWidths.Set("2500*!*2500*!*4200")
+F.Intrinsic.String.Split(V.Local.sTitles,"*!*",V.Local.sTitles)
+F.Intrinsic.String.Split(V.Local.sWidths,"*!*",V.Local.sWidths)
+
+F.Intrinsic.UI.SetBrowserHotTypeAhead(True)
+F.Intrinsic.UI.Browser("Select Part","con",V.Local.sSql,V.Local.sTitles,V.Local.sWidths,10150,8000,V.Local.sRet)
+F.Intrinsic.Control.If(V.Local.sRet,<>,"***CANCEL***")
+	F.Intrinsic.String.Split(V.Local.sRet,"*!*",V.Local.sRet)
+	Gui.SS_Form1.txtPart.Text(V.Local.sRet(0).Trim)
+	V.Global.sPart.Set(V.Local.sRet(1).Trim)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("cmd_txtpart_click_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4100_BOM_Work_Order_Status.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+program.sub.cmd_txtpart_click.end
+
+Program.Sub.ExplodeProc.Start
+F.Intrinsic.Control.SetErrorHandler("ExplodeProc_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+V.Local.iUB.Declare(Long)
+V.Local.sSql.Declare(String)
+V.Local.bChk.Declare(Boolean)
+
+F.Intrinsic.String.Concat("Select JOB, SUFFIX from JOB_HEADER where PART = '",V.Args.sPart,"'",V.Local.sSql)
+F.ODBC.Connection!con.OpenLocalRecordsetRO("rstJob",V.Local.sSql)
+F.Intrinsic.Control.If(V.ODBC.con!rstJob.EOF,<>,True)
+	F.Intrinsic.String.Concat("Select JOB, SUFFIX, PART, DESCRIPTION, HOURS_ESTIMATED, HOURS_ACTUAL from V_JOB_OPERATIONS where JOB = '",V.ODBC.con!rstJob.FieldValTrim!JOB,"' and SUFFIX = '",V.ODBC.con!rstJob.FieldValTrim!SUFFIX,"' and LMO = 'M' and HOURS_ACTUAL < HOURS_ESTIMATED",V.Local.sSql)
+	F.ODBC.Connection!con.OpenLocalRecordsetRO("rstOper",V.Local.sSql)
+	F.Intrinsic.Control.If(V.ODBC.con!rstOper.EOF,<>,True)
+		F.Intrinsic.Control.DoUntil(V.ODBC.con!rstOper.EOF,=,True)
+			F.Intrinsic.Math.Add(V.Global.iLevel,1,V.Global.iLevel)
+			F.Intrinsic.Math.Add(V.Global.iSortOrder,1,V.Global.iSortOrder)
+			F.Intrinsic.String.Concat("Select CODE_SOURCE from INVENTORY_MST2 where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+			F.ODBC.Connection!con.OpenLocalRecordsetRO("rstSource",V.Local.sSql)
+			F.Intrinsic.Control.If(V.ODBC.con!rstSource.EOF,<>,True)
+				F.Intrinsic.Control.If(V.ODBC.con!rstSource.FieldValTrim!CODE_SOURCE,=,"M")
+					V.Local.bChk.Set(True)
+				F.Intrinsic.Control.Else
+					F.Intrinsic.Control.If(V.ODBC.con!rstSource.FieldValTrim!CODE_SOURCE,=,"F")
+						V.Local.bChk.Set(True)
+					F.Intrinsic.Control.Else
+						V.Local.bChk.Set(False)
+					F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.EndIf
+				F.Intrinsic.Control.If(V.Local.bChk,=,True)
+					V.Local.iUB.Set(V.uGlobal.uWOLn.UBound)
+					F.Intrinsic.Control.If(V.uGlobal.uWOLn.UBound,=,-1)
+						V.uGlobal.uWOLn.Redim(0,0)
+					F.Intrinsic.Control.EndIf
+					F.Intrinsic.Math.Add(V.Local.iUB,1,V.Local.iUB)
+					V.uGlobal.uWOLn.RedimPreserve(V.uGlobal.uWOLn.LBound,V.Local.iUB)
+					V.uGlobal.uWOLn(v.Local.iUB)!Sort.Set(V.Global.iSortOrder)
+					V.uGlobal.uWOLn(v.Local.iUB)!Level.Set(V.Global.iLevel)
+					V.uGlobal.uWOLn(V.Local.iUB)!Terminal.Set(V.Caller.Terminal)
+					V.uGlobal.uWOLn(V.Local.iUB)!Job.Set(V.ODBC.con!rstOper.FieldValTrim!JOB)
+					V.uGlobal.uWOLn(V.Local.iUB)!Suffix.Set(V.ODBC.con!rstOper.FieldValTrim!SUFFIX)
+					V.uGlobal.uWOLn(V.Local.iUB)!Part.Set(V.ODBC.con!rstOper.FieldValTrim!PART)
+					V.uGlobal.uWOLn(V.Local.iUB)!Descr.Set(V.ODBC.con!rstOper.FieldValTrim!DESCRIPTION)
+					F.Intrinsic.String.Concat("Select USER_DEFINED_PART from V_INV_CROSS_REF where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstCP",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstCP.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!CustPart.Set(V.ODBC.con!rstCP.FieldValTrim!USER_DEFINED_PART)
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstCP.Close
+					V.uGlobal.uWOLn(V.Local.iUB)!QtyReq.Set(V.ODBC.con!rstOper.FieldValFloat!HOURS_ESTIMATED)
+					V.uGlobal.uWOLn(V.Local.iUB)!QtyIss.Set(V.ODBC.con!rstOper.FieldValFloat!HOURS_ACTUAL)
+					F.Intrinsic.String.Concat("Select PART, QTY_ONHAND, QTY_ONORDER_PO, QTY_ONORDER_WO from V_INVENTORY_MSTR where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstInv",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstInv.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOnH.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONHAND)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyPO.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONORDER_PO)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyWO.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONORDER_WO)
+					F.Intrinsic.Control.Else
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOnH.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyPO.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyWO.Set(0)
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstInv.Close
+					F.Intrinsic.String.Concat("Select PART, QTY_ORDER, DATE_DUE, PART from V_JOB_HEADER where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"' ORDER BY DATE_DUE",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstWO",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstWO.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOrd.Set(V.ODBC.con!rstWO.FieldValFloat!QTY_ORDER)
+						V.uGlobal.uWOLn(V.Local.iUB)!DateDue.Set(V.ODBC.con!rstWO.FieldVal!DATE_DUE)
+						V.uGlobal.uWOLn(v.Local.iUB)!ParentPart.Set(V.ODBC.con!rstWO.FieldValTrim!PART)
+					F.Intrinsic.Control.Else
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOrd.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!DateDue.Set("1900-01-01")
+						V.uGlobal.uWOLn(v.Local.iUB)!ParentPart.Set("")
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstWO.Close
+					'If part is manufactured checking for additional work orders to explode out
+					F.Intrinsic.Control.CallSub(Explodeproc,"sPart",V.ODBC.con!rstOper.FieldValTrim!PART)
+				F.Intrinsic.Control.Else
+					V.Local.iUB.Set(V.uGlobal.uWOLn.UBound)
+					F.Intrinsic.Control.If(V.uGlobal.uWOLn.UBound,=,-1)
+						V.uGlobal.uWOLn.Redim(0,0)
+					F.Intrinsic.Control.EndIf
+					F.Intrinsic.Math.Add(V.Local.iUB,1,V.Local.iUB)
+					V.uGlobal.uWOLn.RedimPreserve(V.uGlobal.uWOLn.LBound,V.Local.iUB)
+					V.uGlobal.uWOLn(v.Local.iUB)!Sort.Set(V.Global.iSortOrder)
+					V.uGlobal.uWOLn(v.Local.iUB)!Level.Set(V.Global.iLevel)
+					V.uGlobal.uWOLn(V.Local.iUB)!Terminal.Set(V.Caller.Terminal)
+					V.uGlobal.uWOLn(V.Local.iUB)!Job.Set(V.ODBC.con!rstOper.FieldValTrim!JOB)
+					V.uGlobal.uWOLn(V.Local.iUB)!Suffix.Set(V.ODBC.con!rstOper.FieldValTrim!SUFFIX)
+					V.uGlobal.uWOLn(V.Local.iUB)!Part.Set(V.ODBC.con!rstOper.FieldValTrim!PART)
+					V.uGlobal.uWOLn(V.Local.iUB)!Descr.Set(V.ODBC.con!rstOper.FieldValTrim!DESCRIPTION)
+					F.Intrinsic.String.Concat("Select USER_DEFINED_PART from V_INV_CROSS_REF where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstCP",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstCP.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!CustPart.Set(V.ODBC.con!rstCP.FieldValTrim!USER_DEFINED_PART)
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstCP.Close
+					V.uGlobal.uWOLn(V.Local.iUB)!QtyReq.Set(V.ODBC.con!rstOper.FieldValFloat!HOURS_ESTIMATED)
+					V.uGlobal.uWOLn(V.Local.iUB)!QtyIss.Set(V.ODBC.con!rstOper.FieldValFloat!HOURS_ACTUAL)
+					F.Intrinsic.String.Concat("Select PART, QTY_ONHAND, QTY_ONORDER_PO, QTY_ONORDER_WO from V_INVENTORY_MSTR where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"'",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstInv",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstInv.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOnH.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONHAND)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyPO.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONORDER_PO)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyWO.Set(V.ODBC.con!rstInv.FieldValFloat!QTY_ONORDER_WO)
+					F.Intrinsic.Control.Else
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOnH.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyPO.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyWO.Set(0)
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstInv.Close
+					'Writing quantity information
+					F.Intrinsic.String.Concat("Select QTY_ORDER, DATE_DUE_LINE, PART from V_PO_LINES where PART = '",V.ODBC.con!rstOper.FieldValTrim!PART,"' ORDER BY DATE_DUE_LINE",V.Local.sSql)
+					F.ODBC.Connection!con.OpenLocalRecordsetRO("rstPO",V.Local.sSql)
+					F.Intrinsic.Control.If(V.ODBC.con!rstPO.EOF,=,False)
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOrd.Set(V.ODBC.con!rstPO.FieldValFloat!QTY_ORDER)
+						V.uGlobal.uWOLn(V.Local.iUB)!DateDue.Set(V.ODBC.con!rstPO.FieldVal!DATE_DUE_LINE)
+						V.uGlobal.uWOLn(v.Local.iUB)!ParentPart.Set(V.ODBC.con!rstPO.FieldValTrim!PART)
+					F.Intrinsic.Control.Else
+						V.uGlobal.uWOLn(V.Local.iUB)!QtyOrd.Set(0)
+						V.uGlobal.uWOLn(V.Local.iUB)!DateDue.Set("1900-01-01")
+						V.uGlobal.uWOLn(v.Local.iUB)!ParentPart.Set("")
+					F.Intrinsic.Control.EndIf
+					F.ODBC.con!rstPO.Close
+				F.Intrinsic.Control.EndIf
+			F.Intrinsic.Control.EndIf
+			F.ODBC.con!rstSource.Close
+			F.ODBC.con!rstOper.MoveNext
+		F.Intrinsic.Control.Loop
+		F.Intrinsic.Math.Sub(V.Global.iLevel,1,V.Global.iLevel)
+	F.Intrinsic.Control.EndIf
+	F.ODBC.con!rstOper.Close
+F.Intrinsic.Control.EndIf
+F.ODBC.con!rstJob.Close
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("ExplodeProc_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4100_BOM_Work_Order_Status.gas",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+
+Program.Sub.ExplodeProc.End
+
+
